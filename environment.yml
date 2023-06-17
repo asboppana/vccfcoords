@@ -1,4 +1,4 @@
-name: coordgen
+name: vccfcoords
 channels:
   - conda-forge
   - defaults
