@@ -1,0 +1,19 @@
+name: coordgen
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - ipykernel
+  - numpy
+  - pandas
+  - tqdm
+  - requests
+  - matplotlib
+  - seaborn
+  - scipy
+  - pytest
+  - pytest-cov
+  - pip
+  - pip:
+    - flake8
