@@ -16,7 +16,7 @@ import scipy
 
 def test_package_imported():
     """Test, will always pass so long as import statement worked."""
-    assert "autopartonomy" in sys.modules
+    assert "vccfcoords" in sys.modules
     
 def test_package_libaries_imported():
     """Test, if the import statements of package libraries worked."""
