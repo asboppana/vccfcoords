@@ -1,5 +1,5 @@
 """
-Unit and regression test for the vccfcoords package.
+Unit test for vccfcoords imports.
 """
 
 # Import package, test suite, and other packages as needed
