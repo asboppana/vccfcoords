@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial import distance
+from scipy.optimize import least_squares
 from typing import Dict, Any, Tuple, List, Union
 
 
@@ -81,4 +82,70 @@ def geom_3D_solver(distances: List[float],
         raise ValueError("No unique solution. The points may not form a tetrahedron.")
     
     return x, y, z
+
+def opt_lse_2D_solver(distances: List[float], 
+                      points: List[Tuple[float, float]]) -> Tuple[float, float]:
+    """
+    Least-square-error optimization solver to the multilateration problem in 2 dimensions.
+    :param distances: distances from an unknown point to at least three reference points with known coordinates
+    :param points: coordinates of at least three reference points
+    :return: computed coordinates of the unknown point
+    :raises ValueError: If number of distances and points are not the same, or less then 3 reference points are given
+    """
+
+    if len(distances) != len(points) or len(distances) < 3:
+        raise ValueError("Number of distances and points must be the same, and at least 3 reference points are required.")
+
+   
+    # Prepare data
+    x_coords, y_coords = zip(*points)
+    p_ref = np.array(points)
+
+    # Calculate centroid of reference points
+    x0 = np.mean(x_coords)
+    y0 = np.mean(y_coords)
+
+    # Error function for optimization
+    def error_func(p):
+        x, y = p
+        return [(x - x_ref)**2 + (y - y_ref)**2 - dist**2 for (x_ref, y_ref), dist in zip(p_ref, distances)]
+
+    # Optimize using least squares with "lm" method and better initial guess
+    result = least_squares(error_func, [x0, y0], method='lm')
+
+    x, y = result.x
+    return x, y
+
+def opt_lse_3D_solver(distances: List[float], points: List[Tuple[float, float, float]]) -> Tuple[float, float, float]:
+    """
+    Least-square-error optimization solver to the multilateration problem in 3 dimensions.
+    :param distances: distances from an unknown point to four or more reference points with known coordinates
+    :param points: coordinates of the four or more reference points
+    :return: computed coordinates of the unknown point
+    :raises ValueError: If number of distances and points are not the same, or less than four reference points are given
+    """
+
+    if len(distances) != len(points) or len(distances) < 4:
+        raise ValueError("Number of distances and points must be the same, and at least four reference points are required.")
+
+    # Prepare data
+    x_coords, y_coords, z_coords = zip(*points)
+    p_ref = np.array(points)
+
+    # Calculate centroid of reference points
+    x0 = np.mean(x_coords)
+    y0 = np.mean(y_coords)
+    z0 = np.mean(z_coords)
+
+    # Error function for optimization
+    def error_func(p):
+        x, y, z = p
+        return [(x - x_ref)**2 + (y - y_ref)**2 + (z - z_ref)**2 - dist**2 for (x_ref, y_ref, z_ref), dist in zip(p_ref, distances)]
+
+    # Optimize using least squares with "lm" method and better initial guess
+    result = least_squares(error_func, [x0, y0, z0], method='lm')
+
+    x, y, z = result.x
+    return x, y, z
+
 
