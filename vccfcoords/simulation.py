@@ -83,7 +83,7 @@ class Simulation:
         val_range = max_val - min_val
         generated_coordinates = np.random.rand(n, n_dim) * val_range + min_val
         
-        return generated_coordinate
+        return generated_coordinates
 
     def method2(self, new_text):
         """
