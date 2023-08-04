@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial import distance
+from vccfcoords import solvers
 from typing import Dict, Any, Tuple, List, Union
 
 def get_euclid_dist(pt1:Union[Tuple[float, float, float], Tuple[float,float]], 
@@ -46,6 +47,8 @@ class Simulation:
                  n_dim: int,
                  coord_min: float,
                  coord_max: float,
+                 n_ref: int,
+                 ref_strat: str,
                  seed: int=0):
         
         """
@@ -54,6 +57,8 @@ class Simulation:
         :param n_dim: number of dimension for the simulated and computed coordinates
         :param coord_min: minimum value of the simulated coordinates
         :param coord_max: maximum value of the simulated coordinates
+        :param n_ref: number of endothelial reference cells with known coordinates for each other cell of unknown coordinates
+        :param ref_strat: strategy for how the reference cells are selected ('random' or 'closest')
         :param seed: value that ensures that if all other parameters of the simulation are the same, 
                      then simulations with the same seed value will contain the same simulated points
         """
@@ -62,9 +67,22 @@ class Simulation:
         self.n_dim = n_dim
         self.coord_min = coord_min
         self.coord_max = coord_max
+        self.n_ref = n_ref
+        self.ref_strat = ref_strat
         self.seed = seed
 
+
+        self.n_all = self.n_EC + self.n_OC
+
         np.random.seed(seed)
+
+        self.coords = self.sim_coordinates(self.n_all,
+                                           self.n_dim,
+                                           self.coord_min,
+                                           self.coord_max)
+        
+        self.EC_idx = set(np.random.choice(list(range(self.n_all)), self.n_EC, replace = False))
+        self.OC_idx = set(list(range(self.n_all))) - self.EC_idx
 
     def sim_coordinates(self,
                         n: int, 
@@ -85,11 +103,14 @@ class Simulation:
         
         return generated_coordinates
 
-    def method2(self, new_text):
+    def get_closest(self,
+                    n_ref: int,
+                    ref_strat: str):
         """
         A method to modify attribute2.
 
         Args:
             new_text (str): The new string value to set attribute2.
         """
-        self.attribute2 = new_text
+        
+        return
