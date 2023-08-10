@@ -32,8 +32,8 @@ class Simulation:
                  n_ref: int,
                  solver_type: str,
                  error_type:str,
-                 coord_noise_amplitude: float,
-                 dist_noise_amplitude: float,
+                 coord_noise_amplitude: float=0,
+                 dist_noise_amplitude: float=0,
                  seed: int=0):
         
         """
@@ -60,6 +60,8 @@ class Simulation:
         self.n_ref = n_ref
         self.solver_type = solver_type
         self.error_type = error_type
+        self.coord_noise_amplitude = coord_noise_amplitude
+        self.dist_noise_amplitude = dist_noise_amplitude
         self.seed = seed
      
         self.n_all = self.n_EC + self.n_OC
@@ -86,7 +88,9 @@ class Simulation:
         #Calculating error
         self.error = self.get_error()
 
-  
+        #Adding Noise
+        self.coords_noisy = Simulation.add_noise(self.coords, self.coord_noise_amplitude)
+
 
     @staticmethod
     def sim_coordinates(n: int, 
