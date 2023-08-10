@@ -32,8 +32,8 @@ class Simulation:
                  n_ref: int,
                  solver_type: str,
                  error_type:str,
-                 coord_noise_percent: float,
-                 dist_noise_percent: float,
+                 coord_noise_amplitude: float,
+                 dist_noise_amplitude: float,
                  seed: int=0):
         
         """
@@ -45,8 +45,8 @@ class Simulation:
         :param n_ref: number of endothelial reference cells with known coordinates for each other cell of unknown coordinates
         :param solver_type: value that specifies whether to use a geometric solver or an optimization solver (options 'geom' or 'opt')
         :param error_type: value that specifies what type of error function to use (options 'avg_dist', 'avg_dist_norm_closet', or 'avg_dist_norm_avg')
-        :param coord_noise_percent: value that specifies the percent of guassian noise to add to simulated coordinates
-        :param dist_noise_percent: value that specifies the percent of guassian noise to add to distances between OC and EC cells
+        :param coord_noise_amplitude: value that specifies the amplitude of guassian noise to add to simulated coordinates
+        :param dist_noise_amplitude: value that specifies the amplitude of guassian noise to add to distances between OC and EC cells
         :param seed: value that ensures that if all other parameters of the simulation are the same, 
                      then simulations with the same seed value will contain the same simulated points
         """
@@ -185,26 +185,20 @@ class Simulation:
         return estimated_coords_dict 
     
     @staticmethod
-    def add_noise(coordinates: np.ndarray,
-                  noise_percent: float) -> np.ndarray:
+    def add_noise(data: np.ndarray,
+                  noise_amplitude: float) -> np.ndarray:
         
         """
         Adds a percent of guassian noise to an input array 
-        param coordinates: array of coordinates
-        param noise_percent: a percent that controls that magnitude of guassian noise to add to the input coordinates
-        return: an noisy array of coordinates
+        param data: array of data to add noise too
+        param noise_amplitude: amplitude of guassian noise to add to the input data
+        return: a noisy array
         """
 
-        # Calculate the amount of noise to add based on percentage
-        noise_amount = (noise_percent / 100) * np.abs(coordinates)
+        noise = noise_amplitude * np.random.normal(size=data.shape)
+        noisy_data = data + noise
 
-        # Generate Gaussian noise with the same shape as the input array
-        noise = np.random.normal(0, 1, size=coordinates.shape)
-
-        # Add scaled noise to each element of the array
-        noisy_coordinates = coordinates + noise_amount * noise
-
-        return noisy_coordinates
+        return noisy_data
     
     def get_error(self) -> float:
         
