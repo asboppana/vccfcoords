@@ -31,6 +31,9 @@ class Simulation:
                  coord_max: float,
                  n_ref: int,
                  solver_type: str,
+                 error_type:str,
+                 coord_noise_percent: float,
+                 dist_noise_percent: float,
                  seed: int=0):
         
         """
@@ -41,6 +44,9 @@ class Simulation:
         :param coord_max: maximum value of the simulated coordinates
         :param n_ref: number of endothelial reference cells with known coordinates for each other cell of unknown coordinates
         :param solver_type: value that specifies whether to use a geometric solver or an optimization solver (options 'geom' or 'opt')
+        :param error_type: value that specifies what type of error function to use (options 'avg_dist', 'avg_dist_norm_closet', or 'avg_dist_norm_avg')
+        :param coord_noise_percent: value that specifies the percent of guassian noise to add to simulated coordinates
+        :param dist_noise_percent: value that specifies the percent of guassian noise to add to distances between OC and EC cells
         :param seed: value that ensures that if all other parameters of the simulation are the same, 
                      then simulations with the same seed value will contain the same simulated points
         """
@@ -53,6 +59,7 @@ class Simulation:
         self.coord_max = coord_max
         self.n_ref = n_ref
         self.solver_type = solver_type
+        self.error_type = error_type
         self.seed = seed
      
         self.n_all = self.n_EC + self.n_OC
@@ -76,8 +83,10 @@ class Simulation:
         #Estimating OC coordinates
         self.OC_coords_pred = self.solve()
 
-        #Computing Metrics
-        self.avg_cell_dist = self.get_avg_cell_dist()
+        #Calculating error
+        self.error = self.get_error()
+
+  
 
     @staticmethod
     def sim_coordinates(n: int, 
@@ -115,7 +124,7 @@ class Simulation:
         distances = np.linalg.norm(coordinate_pool - coordinate_target, axis=1)
 
         # Sort indices based on distances and get the n closest points
-        closest_indices = np.argsort(distances)[:n_closest]
+        closest_indices = list(np.argsort(distances)[:n_closest])
         closest_distances = list(distances[closest_indices])
 
         return closest_distances, closest_indices
@@ -175,10 +184,57 @@ class Simulation:
 
         return estimated_coords_dict 
     
-    def get_avg_cell_dist(self):
-
-        return [np.linalg.norm(x[0]-x[1]) for x in itertools.combinations(self.coords, 2)]
+    @staticmethod
+    def add_noise(coordinates: np.ndarray,
+                  noise_percent: float) -> np.ndarray:
         
+        """
+        Adds a percent of guassian noise to an input array 
+        param coordinates: array of coordinates
+        param noise_percent: a percent that controls that magnitude of guassian noise to add to the input coordinates
+        return: an noisy array of coordinates
+        """
+
+        # Calculate the amount of noise to add based on percentage
+        noise_amount = (noise_percent / 100) * np.abs(coordinates)
+
+        # Generate Gaussian noise with the same shape as the input array
+        noise = np.random.normal(0, 1, size=coordinates.shape)
+
+        # Add scaled noise to each element of the array
+        noisy_coordinates = coordinates + noise_amount * noise
+
+        return noisy_coordinates
+    
+    def get_error(self) -> float:
+        
+        """
+        Computes an average error using a specified error strategy between simulated and predicted coordinates
+        return: value representing an average error between simulated and predicted coordinates
+        """
+
+        pred_coords = np.array([self.OC_coords_pred[x] for x in self.OC_idx])
+        true_coords = self.coords[self.OC_idx]
+
+        if self.error_type == "avg_dist":
+            distances = np.linalg.norm(true_coords - pred_coords, axis = 1)
+            return np.mean(distances)
+        
+        if self.error_type == "avg_dist_norm_closest":
+
+            DIST_IDX = 0
+            FIRST_DIST_IDX = 0
+            N_CLOSEST = 1
+
+            distances = list(np.linalg.norm(true_coords - pred_coords, axis = 1))
+
+            closest_distances = [Simulation.get_closest_points(np.delete(self.coords, idx, axis = 0), 
+                                                               self.coords[idx], N_CLOSEST)[DIST_IDX][FIRST_DIST_IDX] for idx in self.OC_idx]
+            
+            return np.mean([x / y for x,y in zip(distances, closest_distances)])
+            
+        return
+     
 
 
 
