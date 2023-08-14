@@ -1,8 +1,8 @@
 import numpy as np
+import itertools
 from scipy.spatial import distance
 from scipy.optimize import least_squares
 from typing import Dict, Any, Tuple, List, Union
-
 
 def geom_2D_solver(distances: List[float],
                    points: List[Tuple[float, float]]) -> Tuple[float, float]:
@@ -82,6 +82,59 @@ def geom_3D_solver(distances: List[float],
         raise ValueError("No unique solution. The points may not form a tetrahedron.")
     
     return x, y, z
+
+def geom_2D_comb_solver(distances: List[float], 
+                        points: List[Tuple[float, float]]) -> Tuple[float, float]:
+    
+    """
+    Geometric solver to the multilateration problem in 2 dimensions that averages calculations from
+    each combination of 3 points
+    :param distances: distances from an unknown point to at least three reference points with known coordinates
+    :param points: coordinates of at least three reference points
+    :return: average computed coordinates of the unknown point
+    """
+    
+    GEOM_MAX_2D = 3
+    X_IDX = 0
+    Y_IDX = 1
+
+    combination_idx = [list(x) for x in list(itertools.combinations(range(len(distances)), GEOM_MAX_2D))]
+
+    pred_coords_list = [geom_2D_solver(np.array(distances)[idx], points[idx]) for idx in combination_idx]
+
+    x = np.mean([coord[X_IDX] for coord in pred_coords_list])
+    y = np.mean([coord[Y_IDX] for coord in pred_coords_list])
+
+    return x,y
+
+def geom_3D_comb_solver(distances: List[float], 
+                        points: List[Tuple[float, float]]) -> Tuple[float, float]:
+    
+    """
+    Geometric solver to the multilateration problem in 3 dimensions that averages calculations from
+    each combination of 4 points
+    :param distances: distances from an unknown point to at least four reference points with known coordinates
+    :param points: coordinates of at least four reference points
+    :return: average computed coordinates of the unknown point
+    :raises ValueError: If the points provided do not form a tetrahedron, leading to no unique solution.
+    """
+    
+    GEOM_MAX_3D = 4
+    X_IDX = 0
+    Y_IDX = 1
+    Z_IDX = 2
+
+    combination_idx = [list(x) for x in list(itertools.combinations(range(len(distances)), GEOM_MAX_3D))]
+
+    pred_coords_list = [geom_3D_solver(np.array(distances)[idx], points[idx]) for idx in combination_idx]
+
+    x = np.mean([coord[X_IDX] for coord in pred_coords_list])
+    y = np.mean([coord[Y_IDX] for coord in pred_coords_list])
+    z = np.mean([coord[Z_IDX] for coord in pred_coords_list])
+
+    return x,y,z
+    
+
 
 def opt_lse_2D_solver(distances: List[float], 
                       points: List[Tuple[float, float]]) -> Tuple[float, float]:
